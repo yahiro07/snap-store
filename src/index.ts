@@ -23,7 +23,7 @@ type EffectReceiver = {
   cleanup: (() => void)[];
 };
 
-type StoreInstance = {
+type ReactivityHub = {
   // biome-ignore lint/complexity/noBannedTypes: false
   signalHolders: Map<Symbol, SignalHolder<any>>;
   currentEffect: EffectReceiver | undefined;
@@ -31,7 +31,7 @@ type StoreInstance = {
   flushScheduled: boolean;
 };
 
-function createStoreInstance(): StoreInstance {
+function createReactivityHub(): ReactivityHub {
   return {
     signalHolders: new Map(),
     currentEffect: undefined,
@@ -39,15 +39,16 @@ function createStoreInstance(): StoreInstance {
     flushScheduled: false,
   };
 }
+const reactivityHub = createReactivityHub();
 
-function scheduleFlush(storeInstance: StoreInstance) {
-  if (storeInstance.flushScheduled) return;
-  storeInstance.flushScheduled = true;
+function scheduleFlush() {
+  if (reactivityHub.flushScheduled) return;
+  reactivityHub.flushScheduled = true;
 
   Promise.resolve().then(() => {
-    const listeners = Array.from(storeInstance.pendingListeners);
-    storeInstance.pendingListeners.clear();
-    storeInstance.flushScheduled = false;
+    const listeners = Array.from(reactivityHub.pendingListeners);
+    reactivityHub.pendingListeners.clear();
+    reactivityHub.flushScheduled = false;
 
     listeners.forEach((listener) => {
       listener();
@@ -63,16 +64,13 @@ function createEffectReceiver(fn: () => void): EffectReceiver {
   };
 }
 
-function createSignalInStore<T>(
-  initialValue: T,
-  storeInstance: StoreInstance,
-): Signal<T> {
+export function createSignal<T>(initialValue: T): Signal<T> {
   const key = Symbol();
   const holder: SignalHolder<T> = {
     value: initialValue,
     listeners: new Set(),
   };
-  storeInstance.signalHolders.set(key, holder);
+  reactivityHub.signalHolders.set(key, holder);
 
   const subscribe = (listener: SignalListener) => {
     holder.listeners.add(listener);
@@ -81,7 +79,7 @@ function createSignalInStore<T>(
 
   const signal: Signal<T> = {
     get value() {
-      const ce = storeInstance.currentEffect;
+      const ce = reactivityHub.currentEffect;
       if (ce && !ce.signalHolders.has(holder)) {
         ce.signalHolders.add(holder);
         const unsubscribe = subscribe(ce.listener);
@@ -96,9 +94,9 @@ function createSignalInStore<T>(
 
       holder.value = value;
       holder.listeners.forEach((listener) => {
-        storeInstance.pendingListeners.add(listener);
+        reactivityHub.pendingListeners.add(listener);
       });
-      scheduleFlush(storeInstance);
+      scheduleFlush();
     },
     subscribe,
     use() {
@@ -145,8 +143,6 @@ export type Store<T extends object> = {
   signals: { [K in keyof T]: Signal<T[K]> };
 };
 
-const storeInstance = createStoreInstance();
-
 export function createStore<T extends object>(initialState: T): Store<T> {
   type K = keyof T;
   const stateGetters: any = {};
@@ -156,7 +152,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   for (const key in initialState) {
     const initialValue = initialState[key];
-    const signal = createSignalInStore(initialValue, storeInstance);
+    const signal = createSignal(initialValue);
 
     Object.defineProperty(stateGetters, key, {
       get() {
@@ -200,21 +196,17 @@ export function createStore<T extends object>(initialState: T): Store<T> {
   };
 }
 
-export const createSignal = <Q>(initialValue: Q): Signal<Q> => {
-  return createSignalInStore(initialValue, storeInstance);
-};
-
 export const effect = (fn: () => void): (() => void) => {
   const effectReceiver = createEffectReceiver(fn);
 
   // Set current effect for dependency tracking
-  const prevEffect = storeInstance.currentEffect;
-  storeInstance.currentEffect = effectReceiver;
+  const prevEffect = reactivityHub.currentEffect;
+  reactivityHub.currentEffect = effectReceiver;
 
   try {
     fn(); // Execute effect to collect dependencies
   } finally {
-    storeInstance.currentEffect = prevEffect;
+    reactivityHub.currentEffect = prevEffect;
   }
 
   // Return cleanup function
@@ -229,7 +221,7 @@ export const effect = (fn: () => void): (() => void) => {
 
 export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
   // biome-ignore lint/style/noNonNullAssertion: false
-  const internalSignal = createSignalInStore<U>(undefined!, storeInstance);
+  const internalSignal = createSignal<U>(undefined!);
 
   let initialized: boolean;
   let cleanupEffect: (() => void) | undefined;
@@ -241,14 +233,14 @@ export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
         internalSignal.setValue(newValue);
       });
 
-      const prevEffect = storeInstance.currentEffect;
-      storeInstance.currentEffect = effectReceiver;
+      const prevEffect = reactivityHub.currentEffect;
+      reactivityHub.currentEffect = effectReceiver;
 
       try {
         const initialValue = fn();
         internalSignal.setValue(initialValue);
       } finally {
-        storeInstance.currentEffect = prevEffect;
+        reactivityHub.currentEffect = prevEffect;
       }
 
       cleanupEffect = () => {
