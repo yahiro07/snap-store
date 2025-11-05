@@ -191,13 +191,13 @@ There are two `effect()` and `computed()` helper functions intended to be used i
 
 `effect()` tracks the referred state changes in the callback and is automatically re-evaluated when the tracked values change.
 
-`computed()` is used for caching the computation result, returning the read-only signal. It is re-evaluated when tracked values change.
+`computed()` is used for caching the computation result, returning a derived signal. It is re-evaluated when tracked values change.
 
 ## References
 - [valtio](https://github.com/pmndrs/valtio)
 - [@preact/signals-react](https://github.com/preactjs/signals)
 
-snap-store is highly influenced by these libraries.
+`snap-store` is highly influenced by these libraries.
 
 Compared to `valtio`, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
 
