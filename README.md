@@ -13,6 +13,7 @@ npm install snap-store
 
 I like [valtio](https://github.com/pmndrs/valtio). But sometimes I'm confused by its proxy based design.
 So I wanted to have a non-proxy version of this.
+
 I researched some signal based libraries and how to make them work on React.
 I found some hooks (`useSyncExternalStore`) could be used to implement it.
 After struggling for a while, finally I got my own store library working!
@@ -59,8 +60,10 @@ const Component = () => {
 }
 ```
 In the component, `store.snapshot` is used to refer to the store state as a reactive value.
+
 Since this is a global state library, you can also read and write store states outside components.
 `store.state` is used to read the value in non-component functions.
+
 `store.mutations` has no difference in component or non-component context.
 
 ```ts
@@ -71,8 +74,11 @@ store.mutations.patchUser({ age: 22});		//partial update (merged)
 store.mutations.produceUser(draft => { draft.age = 23 })    //update with immer
 ```
 It comes with various update methods for each field.
+
 `set*` methods are similar to the setter function of `useState`. It takes a value or a function.
+
 `patch*` could be used for a partial update. The new state is merged with the previous state and new attributes.
+
 `produce*` wraps the `produce` function of `immer`. (`immer` is included in the dependencies.)
 
 ```ts
@@ -88,6 +94,7 @@ store.mutations.setPenStyle('dashed');
 ```
 In mutations, there is `assigns` method to set multiple fields at a time.
 It is useful if you want to update multiple values.
+
 There is no performance difference since reactive effects (i.e. rendering) are batched and executed in the next frame.
 
 ```ts
@@ -138,7 +145,10 @@ const Component = () => {
 }
 ```
 Each member of the snapshot object is a getter and it calls a hooks (`useSyncExternalStore`) internally.
-Since a component must have the same hooks count for each render, non-destructive assign and early return are a bad combination. The snapshot should be destructured if you have an early return.
+
+Since a component must have the same hooks count for each render, non-destructive assign and early return are a bad combination.
+
+The snapshot should be destructured if you have an early return.
 
 ## Other Signal functionalities
 ```ts
@@ -159,7 +169,9 @@ const doubled = computed(() => {
 console.log("Doubled:", doubled.value);
 ```
 There are two `effect()` and `computed()` helper functions intended to be used in non-component context.
+
 `effect()` tracks the referred state changes in the callback and is automatically re-evaluated when the tracked values change.
+
 `computed()` is used for caching the computation result, returning the read-only signal. It is re-evaluated when tracked values change.
 
 ## References
