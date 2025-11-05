@@ -114,8 +114,6 @@ function capitalizeFirstLetter(text: string) {
 }
 
 type Mutations<T> = {
-  assigns: (attrs: Partial<T>) => void;
-} & {
   [K in keyof T as `set${Capitalize<K & string>}`]: (
     value: T[K] | ((prev: T[K]) => T[K]),
   ) => void;
@@ -127,6 +125,8 @@ type Mutations<T> = {
   [K in keyof T as `patch${Capitalize<K & string>}`]: (
     attrs: Partial<T[K]>,
   ) => void;
+} & {
+  assigns: (attrs: Partial<T>) => void;
 };
 
 type ReadonlySignal<T> = {
@@ -138,12 +138,11 @@ type ReadonlySignal<T> = {
 };
 
 export type Store<T extends object> = {
-  signals: { [K in keyof T]: Signal<T[K]> };
   state: T;
-  useSnapshot(): T;
-  mutations: Mutations<T>;
   snapshot: T;
-  use(): [T, Mutations<T>];
+  useSnapshot(): T; //store.useSnapshot() is equivalent to store.snapshot
+  mutations: Mutations<T>;
+  signals: { [K in keyof T]: Signal<T[K]> };
 };
 
 const storeInstance = createStoreInstance();
@@ -194,11 +193,10 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   return {
     state: stateGetters,
+    snapshot: snapshotGetters,
     useSnapshot: () => snapshotGetters,
     mutations,
     signals,
-    snapshot: snapshotGetters,
-    use: () => [stateGetters, mutations],
   };
 }
 
