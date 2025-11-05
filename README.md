@@ -104,22 +104,41 @@ const ThemeSelector = () => {
   const { theme } = store.snapshot;
   const { setTheme } = store.mutations;
   return <div>
-    <IconButton  icon="☀️" active={theme === 'light'} onClick={() => setTheme("light") />
-    <IconButton  icon="🌙" active={theme === 'dark'} onClick={() => setTheme("dark") />
+    <IconButton
+      icon="☀️"
+      active={theme === 'light'}
+      onClick={() => setTheme("light")}
+    />
+    <IconButton
+      icon="🌙"
+      active={theme === 'dark'}
+      onClick={() => setTheme("dark")}
+    />
   </div>
 }
 ```
 Here is a typical theme selector example.
 
 ```ts
-const store = createStore<{textSize: number, bgColor: string}>({textSize: 5, bgColor: "#ffffff" })
+const store = createStore<{textSize: number, bgColor: string}>({
+  textSize: 5,
+  bgColor: "#ffffff"
+})
 
 const BookReaderSettings = () => {
   const snap = store.snapshot;
   const mut = store.mutations;
   return <div>
-    <Slider value={snap.textSize} onChange={mut.setTextSize} min={10} max={20} />
-    <ColorInput value={snap.bgColor} onChange={mut.setBgColor} />
+    <Slider
+      value={snap.textSize}
+      onChange={mut.setTextSize}
+      min={10}
+      max={20}
+    />
+    <ColorInput
+      value={snap.bgColor}
+      onChange={mut.setBgColor}
+    />
   </div>
 }
 ```
