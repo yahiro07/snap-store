@@ -1,4 +1,3 @@
-import { useEffect, useMemo } from "react";
 import { EffectReceiver, reactivityHub } from "./reactivity-hub";
 import { createSignal } from "./signal";
 import { ComputedSignal } from "./types";
@@ -88,15 +87,4 @@ export const computed = <U>(fn: () => U): ComputedSignal<U> => {
       cleanupEffect?.();
     },
   };
-};
-
-// Used when utilizing values derived from multiple stores in the UI
-// Not used for local hooks' state or other non-store values
-export const useDerived = <U>(fn: () => U): U => {
-  const computedSignal = useMemo(() => computed(fn), [fn]);
-  const value = computedSignal.use();
-  useEffect(() => {
-    return () => computedSignal.cleanup();
-  }, [computedSignal]);
-  return value;
 };
