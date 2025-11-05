@@ -24,37 +24,49 @@ type EffectReceiver = {
 };
 
 type ReactivityHub = {
-  // biome-ignore lint/complexity/noBannedTypes: false
-  signalHolders: Map<Symbol, SignalHolder<any>>;
-  currentEffect: EffectReceiver | undefined;
-  pendingListeners: Set<SignalListener>;
-  flushScheduled: boolean;
+  registerSignal(key: symbol, holder: SignalHolder<any>): void;
+  getCurrentEffect(): EffectReceiver | undefined;
+  setCurrentEffect(effect: EffectReceiver | undefined): void;
+  addPendingListener(listener: SignalListener): void;
+  scheduleFlush(): void;
 };
 
 function createReactivityHub(): ReactivityHub {
+  const signalHolders = new Map<symbol, SignalHolder<any>>();
+  let currentEffect: EffectReceiver | undefined;
+  const pendingListeners = new Set<SignalListener>();
+  let flushScheduled = false;
+
   return {
-    signalHolders: new Map(),
-    currentEffect: undefined,
-    pendingListeners: new Set(),
-    flushScheduled: false,
+    registerSignal(key: symbol, holder: SignalHolder<any>) {
+      signalHolders.set(key, holder);
+    },
+    getCurrentEffect() {
+      return currentEffect;
+    },
+    setCurrentEffect(effect: EffectReceiver | undefined) {
+      currentEffect = effect;
+    },
+    addPendingListener(listener: SignalListener) {
+      pendingListeners.add(listener);
+    },
+    scheduleFlush() {
+      if (flushScheduled) return;
+      flushScheduled = true;
+
+      Promise.resolve().then(() => {
+        const listeners = Array.from(pendingListeners);
+        pendingListeners.clear();
+        flushScheduled = false;
+
+        listeners.forEach((listener) => {
+          listener();
+        });
+      });
+    },
   };
 }
 const reactivityHub = createReactivityHub();
-
-function scheduleFlush() {
-  if (reactivityHub.flushScheduled) return;
-  reactivityHub.flushScheduled = true;
-
-  Promise.resolve().then(() => {
-    const listeners = Array.from(reactivityHub.pendingListeners);
-    reactivityHub.pendingListeners.clear();
-    reactivityHub.flushScheduled = false;
-
-    listeners.forEach((listener) => {
-      listener();
-    });
-  });
-}
 
 function createEffectReceiver(fn: () => void): EffectReceiver {
   return {
@@ -70,7 +82,7 @@ export function createSignal<T>(initialValue: T): Signal<T> {
     value: initialValue,
     listeners: new Set(),
   };
-  reactivityHub.signalHolders.set(key, holder);
+  reactivityHub.registerSignal(key, holder);
 
   const subscribe = (listener: SignalListener) => {
     holder.listeners.add(listener);
@@ -79,7 +91,7 @@ export function createSignal<T>(initialValue: T): Signal<T> {
 
   const signal: Signal<T> = {
     get value() {
-      const ce = reactivityHub.currentEffect;
+      const ce = reactivityHub.getCurrentEffect();
       if (ce && !ce.signalHolders.has(holder)) {
         ce.signalHolders.add(holder);
         const unsubscribe = subscribe(ce.listener);
@@ -94,9 +106,9 @@ export function createSignal<T>(initialValue: T): Signal<T> {
 
       holder.value = value;
       holder.listeners.forEach((listener) => {
-        reactivityHub.pendingListeners.add(listener);
+        reactivityHub.addPendingListener(listener);
       });
-      scheduleFlush();
+      reactivityHub.scheduleFlush();
     },
     subscribe,
     use() {
@@ -200,13 +212,13 @@ export const effect = (fn: () => void): (() => void) => {
   const effectReceiver = createEffectReceiver(fn);
 
   // Set current effect for dependency tracking
-  const prevEffect = reactivityHub.currentEffect;
-  reactivityHub.currentEffect = effectReceiver;
+  const prevEffect = reactivityHub.getCurrentEffect();
+  reactivityHub.setCurrentEffect(effectReceiver);
 
   try {
     fn(); // Execute effect to collect dependencies
   } finally {
-    reactivityHub.currentEffect = prevEffect;
+    reactivityHub.setCurrentEffect(prevEffect);
   }
 
   // Return cleanup function
@@ -233,14 +245,14 @@ export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
         internalSignal.setValue(newValue);
       });
 
-      const prevEffect = reactivityHub.currentEffect;
-      reactivityHub.currentEffect = effectReceiver;
+      const prevEffect = reactivityHub.getCurrentEffect();
+      reactivityHub.setCurrentEffect(effectReceiver);
 
       try {
         const initialValue = fn();
         internalSignal.setValue(initialValue);
       } finally {
-        reactivityHub.currentEffect = prevEffect;
+        reactivityHub.setCurrentEffect(prevEffect);
       }
 
       cleanupEffect = () => {
