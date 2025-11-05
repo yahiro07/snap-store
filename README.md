@@ -11,7 +11,7 @@ npm install snap-store
 
 ## Motivation
 
-I like valtio. But sometimes I'm confused by its proxy based design.
+I like [valtio](https://github.com/pmndrs/valtio). But sometimes I'm confused by its proxy based design.
 So I wanted to have a non-proxy version of this.
 I researched some signal based libraries and how to make them work on React.
 I found some hooks (`useSyncExternalStore`) could be used to implement it.
@@ -163,12 +163,12 @@ There are two `effect()` and `computed()` helper functions intended to be used i
 `computed()` is used for caching the computation result, returning the read-only signal. It is re-evaluated when tracked values change.
 
 ## References
-- [Valtio](https://github.com/pmndrs/valtio)
+- [valtio](https://github.com/pmndrs/valtio)
 - [@preact/signals-react](https://github.com/preactjs/signals)
 
 snap-store is highly influenced by these libraries.
 
-Compared to `Valtio`, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
+Compared to `valtio`, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
 
 Compared to `@preact/signals-react`, although the mechanism of the signal is similar, this library is aimed to supply an opinionated store system whereas `@preact/signals` provides the basic primitive signal functions.
 
