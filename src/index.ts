@@ -24,6 +24,7 @@ type EffectReceiver = {
 };
 
 type StoreInstance = {
+  // biome-ignore lint/complexity/noBannedTypes: false
   signalHolders: Map<Symbol, SignalHolder<any>>;
   currentEffect: EffectReceiver | undefined;
   pendingListeners: Set<SignalListener>;
@@ -48,7 +49,9 @@ function scheduleFlush(storeInstance: StoreInstance) {
     storeInstance.pendingListeners.clear();
     storeInstance.flushScheduled = false;
 
-    listeners.forEach((listener) => listener());
+    listeners.forEach((listener) => {
+      listener();
+    });
   });
 }
 
@@ -62,7 +65,7 @@ function createEffectReceiver(fn: () => void): EffectReceiver {
 
 function createSignalInStore<T>(
   initialValue: T,
-  storeInstance: StoreInstance
+  storeInstance: StoreInstance,
 ): Signal<T> {
   const key = Symbol();
   const holder: SignalHolder<T> = {
@@ -114,15 +117,15 @@ type Mutations<T> = {
   assigns: (attrs: Partial<T>) => void;
 } & {
   [K in keyof T as `set${Capitalize<K & string>}`]: (
-    value: T[K] | ((prev: T[K]) => T[K])
+    value: T[K] | ((prev: T[K]) => T[K]),
   ) => void;
 } & {
   [K in keyof T as `produce${Capitalize<K & string>}`]: (
-    fn: (draft: T[K]) => void
+    fn: (draft: T[K]) => void,
   ) => void;
 } & {
   [K in keyof T as `patch${Capitalize<K & string>}`]: (
-    attrs: Partial<T[K]>
+    attrs: Partial<T[K]>,
   ) => void;
 };
 
@@ -168,12 +171,12 @@ export function createStore<T extends object>(initialState: T): Store<T> {
     });
     mutations[`set${capitalizeFirstLetter(key as string)}`] = signal.setValue;
     mutations[`produce${capitalizeFirstLetter(key)}`] = (
-      fn: (draft: T[K]) => void
+      fn: (draft: T[K]) => void,
     ) => {
       signal.setValue((draft) => produce(draft, fn));
     };
     mutations[`patch${capitalizeFirstLetter(key)}`] = (
-      attrs: Partial<T[K]>
+      attrs: Partial<T[K]>,
     ) => {
       signal.setValue((prev) => ({ ...prev, ...attrs }));
     };
@@ -218,13 +221,16 @@ export const effect = (fn: () => void): (() => void) => {
 
   // Return cleanup function
   return () => {
-    effectReceiver.cleanup.forEach((cleanup) => cleanup());
+    effectReceiver.cleanup.forEach((cleanup) => {
+      cleanup();
+    });
     effectReceiver.cleanup.length = 0;
     effectReceiver.signalHolders.clear();
   };
 };
 
 export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
+  // biome-ignore lint/style/noNonNullAssertion: false
   const internalSignal = createSignalInStore<U>(undefined!, storeInstance);
 
   let initialized: boolean;
@@ -248,7 +254,9 @@ export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
       }
 
       cleanupEffect = () => {
-        effectReceiver.cleanup.forEach((cleanup) => cleanup());
+        effectReceiver.cleanup.forEach((cleanup) => {
+          cleanup();
+        });
         effectReceiver.cleanup.length = 0;
         effectReceiver.signalHolders.clear();
       };
@@ -280,10 +288,10 @@ export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
 // Used when utilizing values derived from multiple stores in the UI
 // Not used for local hooks' state or other non-store values
 export const useDerived = <U>(fn: () => U): U => {
-  const computedSignal = useMemo(() => computed(fn), []);
+  const computedSignal = useMemo(() => computed(fn), [fn]);
   const value = computedSignal.use();
   useEffect(() => {
     return () => computedSignal.cleanup();
-  }, []);
+  }, [computedSignal]);
   return value;
 };
