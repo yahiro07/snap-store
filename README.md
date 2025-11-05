@@ -174,5 +174,6 @@ Compared to `@preact/signals-react`, although the mechanism of the signal is sim
 
 ## License
 
-MIT
+MIT License
+
 
