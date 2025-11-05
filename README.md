@@ -19,13 +19,14 @@ After struggling for a while, finally I got my own store library working!
 
 ```ts
 import {createStore} from "snap-store"
+
 const store = createStore({ count: 0});
 
 const Counter = () => {
   const { count } = store.snapshot;
   const { setCount } = store.mutations;
   return <button onClick={() => setCount(prev => prev + 1)}>
-	  {count}
+    {count}
   </button>
 }
 ```
@@ -48,7 +49,7 @@ const store = createStore({ count: 0});
 
 function handleButton(){
   const { count } = store.state;    //read store state
-  store.mutations.setCount(currentCount + 1); //mutate by assign
+  store.mutations.setCount(currentCount + 1); //mutate by value
   store.mutations.setCount(prev => prev + 1); //mutate by function
 }
 
@@ -70,10 +71,24 @@ store.mutations.patchUser({ age: 22});		//partial update (merged)
 store.mutations.produceUser(draft => { draft.age = 23 })    //update with immer
 ```
 It comes with various update methods for each field.
-`set*` methods are similar to the setter function of useState. It takes a value or a function.
+`set*` methods are similar to the setter function of `useState`. It takes a value or a function.
 `patch*` could be used for a partial update. The new state is merged with the previous state and new attributes.
 `produce*` wraps the `produce` function of `immer`. (`immer` is included in the dependencies.)
 
+```ts
+const store = createStore({ 
+  penWidth: 3, 
+  penColor: 'black', 
+  penStyle: 'normal'
+});
+store.mutations.assigns({ penWidth: 1, penStyle: 'dashed' });
+//is equivalent to
+store.mutations.setPenWidth(1);
+store.mutations.setPenStyle('dashed');
+```
+In mutations, there is `assigns` method to set multiple fields at a time.
+It is useful if you want to update multiple values.
+There is no performance difference since reactive effects (i.e. rendering) are batched and executed in the next frame.
 
 ```ts
 const store = createStore<{theme: "light" | "dark"}>({theme: "light" })
@@ -153,9 +168,9 @@ There are two `effect()` and `computed()` helper functions intended to be used i
 
 snap-store is highly influenced by these libraries.
 
-Compared to Valtio, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
+Compared to `Valtio`, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
 
-Compared to @preact/signals-react, although the mechanism of the signal is similar, this library is aimed to supply an opinionated store system whereas @preact/signals provides the basic primitive signal functions.
+Compared to `@preact/signals-react`, although the mechanism of the signal is similar, this library is aimed to supply an opinionated store system whereas `@preact/signals` provides the basic primitive signal functions.
 
 ## License
 
