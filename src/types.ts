@@ -2,11 +2,21 @@ export type SignalListener = () => void;
 
 export type SetterPayload<T> = T | ((prev: T) => T);
 
+//purer signal, created for each field of the state object
 export type Signal<T> = {
   readonly value: T;
   setValue(arg: SetterPayload<T>): void;
-  subscribe(listener: () => void): () => void;
+  subscribe(listener: SignalListener): () => void;
   use(): T;
+};
+
+//computed signal, returned value of computed() function
+export type ComputedSignal<T> = {
+  readonly value: T;
+  subscribe(listener: SignalListener): () => void;
+  readonly snapshotValue: T;
+  use(): T;
+  cleanup(): void;
 };
 
 export type Mutations<T> = {

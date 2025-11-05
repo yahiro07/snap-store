@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { EffectReceiver, reactivityHub } from "./reactivity-hub";
 import { createSignal } from "./signal";
-import { SignalListener } from "./types";
+import { ComputedSignal } from "./types";
 
 function createEffectReceiver(fn: () => void): EffectReceiver {
   return {
@@ -34,15 +34,7 @@ export const effect = (fn: () => void): (() => void) => {
   };
 };
 
-export type ReadonlySignal<T> = {
-  readonly value: T;
-  subscribe(listener: SignalListener): () => void;
-  readonly snapshotValue: T;
-  use(): T;
-  cleanup(): void;
-};
-
-export const computed = <U>(fn: () => U): ReadonlySignal<U> => {
+export const computed = <U>(fn: () => U): ComputedSignal<U> => {
   // biome-ignore lint/style/noNonNullAssertion: false
   const internalSignal = createSignal<U>(undefined!);
 

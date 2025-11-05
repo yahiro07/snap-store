@@ -11,7 +11,7 @@ export type EffectReceiver = {
   cleanup: (() => void)[];
 };
 
-export type ReactivityHub = {
+type ReactivityHub = {
   registerSignal(key: symbol, holder: SignalHolder<any>): void;
   getCurrentEffect(): EffectReceiver | undefined;
   setCurrentEffect(effect: EffectReceiver | undefined): void;
