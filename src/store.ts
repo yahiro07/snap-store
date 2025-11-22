@@ -14,6 +14,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   const state = initialState;
   const mutations = {} as Mutations<T>;
+  const _mutations = mutations as any;
 
   for (const _key in initialState) {
     const key = _key as K;
@@ -35,11 +36,11 @@ export function createStore<T extends object>(initialState: T): Store<T> {
       }
     };
     const suffix = capitalizeFirstLetter(key);
-    mutations[`set${suffix}`] = setValue;
-    mutations[`produce${suffix}`] = (fn: (draft: V) => void) => {
+    _mutations[`set${suffix}`] = setValue;
+    _mutations[`produce${suffix}`] = (fn: (draft: V) => void) => {
       setValue((draft) => produce(draft, fn));
     };
-    mutations[`patch${suffix}`] = (attrs: Partial<V>) => {
+    _mutations[`patch${suffix}`] = (attrs: Partial<V>) => {
       setValue((prev) => ({ ...prev, ...attrs }));
     };
   }
@@ -47,7 +48,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
     for (const key in attrs) {
       const suffix = capitalizeFirstLetter(key);
       const value = attrs[key];
-      const setValue = mutations[`set${suffix}`];
+      const setValue = _mutations[`set${suffix}`];
       setValue?.(value);
     }
   };
