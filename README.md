@@ -1,22 +1,34 @@
 # snap-store
 
-## Introduction
-
-This is an easy-to-use global state management library for React.
+Easy-to-use global state management library for React.
 
 ## Installation
 ```sh
 npm install snap-store
 ```
 
-## Motivation
+## Overview
 
-I like [valtio](https://github.com/pmndrs/valtio). But sometimes I'm confused by its proxy based design.
-So I wanted to have a non-proxy version of this.
+**snap-store** simplifies global state management in React. 
 
-I researched some signal based libraries and how to make them work on React.
-I found some hooks (`useSyncExternalStore`) could be used to implement it.
-After struggling for a while, finally I got my own store library working!
+In apps like graphical editors or tools with editing functionality, it's often desirable to maintain state in a global store accessible throughout the application.
+
+This library is designed to let you place app state to a central store while keeping your existing component implementations mostly intact. 
+
+It minimizes boilerplate code and complex hook calls, making it easy to create a central store that can be shared across multiple components.
+
+
+### Key Features
+
+**snap-store** is designed with the following principles:
+
+1. **Easy to Migrate from Local State**: Store state is subscribed as plain values and updated with methods like `setValue(newValue)`, making it easy to migrate from local `useState` to a global store with minimal component changes.
+
+2. **Consistent Access Pattern**: Both in-component and out-of-component store access use a similar API, making it easy to extract complex state update logic outside of components.
+
+3. **Convenient Update Methods**: In addition to basic setters, the library provides useful update methods like `patch*` for partial updates and `produce*` for immer-based updates.
+
+## Basic Usage
 
 ```ts
 import {createStore} from "snap-store"
@@ -24,7 +36,7 @@ import {createStore} from "snap-store"
 const store = createStore({ count: 0});
 
 const Counter = () => {
-  const { count } = store.snapshot;
+  const { count } = store.useSnapshot();
   const { setCount } = store.mutations;
   return <button onClick={() => setCount(prev => prev + 1)}>
     {count}
@@ -37,14 +49,13 @@ const Counter = () => {
 const store = createStore({ count: 0});
 ```
 `createStore` takes an initial state object and returns a store.
-The store holds wrapper signals for each field of the state object.
 ```ts
-const { count } = store.snapshot;
+const { count } = store.useSnapshot();
 ```
-In a component, `snapshot` getter is used to refer to the states and make them reactive.
+In a component, `useSnapshot()` hook is used to refer to the states and make them reactive.
 For this line, `count` is actually a getter and it registers a listener to track the value change.
 
-## Usage Examples
+## Examples
 ```ts
 const store = createStore({ count: 0});
 
@@ -55,11 +66,11 @@ function handleButton(){
 }
 
 const Component = () => {
-  const { count } = store.snapshot;		//refer store state as reactive
+  const { count } = store.useSnapshot();		//refer store state as reactive
   return <button onClick={handleButton}>push me {count}</button>
 }
 ```
-In the component, `store.snapshot` is used to refer to the store state as a reactive value.
+In the component, `store.useSnapshot()` is used to refer to the store state as a reactive value.
 
 Since this is a global state library, you can also read and write store states outside components.
 `store.state` is used to read the value in non-component functions.
@@ -95,13 +106,13 @@ store.mutations.setPenStyle('dashed');
 In mutations, there is `assigns` method to set multiple fields at a time.
 It is useful if you want to update multiple values.
 
-There is no performance difference since reactive effects (i.e. rendering) are batched and executed in the next frame.
+There is no performance difference since reactive effects (i.e. rendering) are batched by React and executed in the next frame.
 
 ```ts
 const store = createStore<{theme: "light" | "dark"}>({theme: "light" })
 
 const ThemeSelector = () => {
-  const { theme } = store.snapshot;
+  const { theme } = store.useSnapshot();
   const { setTheme } = store.mutations;
   return <div>
     <IconButton
@@ -126,7 +137,7 @@ const store = createStore<{textSize: number, bgColor: string}>({
 })
 
 const BookReaderSettings = () => {
-  const snap = store.snapshot;
+  const snap = store.useSnapshot();;
   const mut = store.mutations;
   return <div>
     <Slider
@@ -151,60 +162,27 @@ const store = createStore({ name: "Mike", age: 20 });
 
 //wrong code
 const Component = () => {
-  const snap = store.snapshot;
+  const snap = store.useSnapshot();;
   if(snap.age < 20) return; //bad early return
   return <div>Hello Gentleman, {snap.name}</div>
 }
 
 //working code
 const Component = () => {
-  const { age, name }  = store.snapshot;
+  const { age, name }  = store.useSnapshot();;
   if(age < 20) return;  //no problem
   return <div>Hello Gentleman, {name}</div>
 }
 ```
-Each member of the snapshot object is a getter and it calls a hooks (`useSyncExternalStore`) internally.
+Each member of the snapshot object is a getter and it calls a hooks internally.
 
 Since a component must have the same hooks count for each render, non-destructive assign and early return are a bad combination.
 
-The snapshot should be destructured if you have an early return.
-
-## Other Signal functionalities
-```ts
-const store = createStore({ count: 0 });
-
-effect(() => {
-  const count = store.state.count;
-  console.log("Effect:", count);
-});
-
-store.mutations.setCount((prev) => prev + 1);
-
-const doubled = computed(() => {
-  const cnt = store.state.count;
-  console.log("computing for:", cnt);
-  return cnt * 2;
-});
-console.log("Doubled:", doubled.value);
-```
-There are two `effect()` and `computed()` helper functions intended to be used in non-component context.
-
-`effect()` tracks the referred state changes in the callback and is automatically re-evaluated when the tracked values change.
-
-`computed()` is used for caching the computation result, returning a derived signal. It is re-evaluated when tracked values change.
-
-## References
-- [valtio](https://github.com/pmndrs/valtio)
-- [@preact/signals-react](https://github.com/preactjs/signals)
-
-`snap-store` is highly influenced by these libraries.
-
-Compared to `valtio`, this library provides a similar design of global store but it doesn't use proxies. Also the mutations are applied by the methods not by assignment.
-
-Compared to `@preact/signals-react`, although the mechanism of the signal is similar, this library is aimed to supply an opinionated store system whereas `@preact/signals` provides the basic primitive signal functions.
+The snapshot object should be destructured if you have an early return.
 
 ## License
 
 MIT License
+
 
 
