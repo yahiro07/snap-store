@@ -61,7 +61,7 @@ const store = createStore({ count: 0});
 
 function handleButton(){
   const { count } = store.state;    //read store state
-  store.mutations.setCount(currentCount + 1); //mutate by value
+  store.mutations.setCount(count + 1); //mutate by value
   store.mutations.setCount(prev => prev + 1); //mutate by function
 }
 
