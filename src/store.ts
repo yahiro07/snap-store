@@ -85,10 +85,10 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   return {
     state,
-    mutations,
     useSnapshot,
     get snapshot() {
       return useSnapshot();
     },
+    ...mutations,
   };
 }

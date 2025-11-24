@@ -18,5 +18,4 @@ export type Store<T extends object> = {
   state: T;
   useSnapshot(): T;
   snapshot: T; //same as useSnapshot()
-  mutations: Mutations<T>;
-};
+} & Mutations<T>;
