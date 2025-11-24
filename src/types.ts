@@ -8,7 +8,7 @@ export type Mutations<T> = {
   ) => void;
 } & {
   [K in keyof T as `patch${Capitalize<K & string>}`]: (
-    attrs: Partial<T[K]>,
+    attrs: Partial<Extract<T[K], object>>,
   ) => void;
 } & {
   assigns: (attrs: Partial<T>) => void;
