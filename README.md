@@ -37,8 +37,7 @@ const store = createStore({ count: 0});
 
 const Counter = () => {
   const { count } = store.useSnapshot();
-  const { setCount } = store.mutations;
-  return <button onClick={() => setCount(prev => prev + 1)}>
+  return <button onClick={() => store.setCount(prev => prev + 1)}>
     {count}
   </button>
 }
@@ -61,8 +60,8 @@ const store = createStore({ count: 0});
 
 function handleButton(){
   const { count } = store.state;    //read store state
-  store.mutations.setCount(count + 1); //mutate by value
-  store.mutations.setCount(prev => prev + 1); //mutate by function
+  store.setCount(count + 1); //mutate by value
+  store.setCount(prev => prev + 1); //mutate by function
 }
 
 const Component = () => {
@@ -75,16 +74,17 @@ In the component, `store.useSnapshot()` is used to refer to the store state as a
 Since this is a global state library, you can also read and write store states outside components.
 `store.state` is used to read the value in non-component functions.
 
-`store.mutations` has no difference in component or non-component context.
+Mutation methods have no difference in component or non-component context.
 
 ```ts
 const store = createStore({ user: {name: "John", age: 20 }});
-store.mutations.setUser({ name: "Mike", age: 20});       //value
-store.mutations.setUser(prev => ({...prev, age: 21}));     //by function
-store.mutations.patchUser({ age: 22});		//partial update (merged)
-store.mutations.produceUser(draft => { draft.age = 23 })    //update with immer
+store.setUser({ name: "Mike", age: 20});       //value
+store.setUser(prev => ({...prev, age: 21}));     //by function
+store.patchUser({ age: 22});		//partial update (merged)
+store.produceUser(draft => { draft.age = 23 })    //update with immer
 ```
-It comes with various update methods for each field.
+
+`store` object has a set of update methods for each field.
 
 `set*` methods are similar to the setter function of `useState`. It takes a value or a function.
 
@@ -98,12 +98,12 @@ const store = createStore({
   penColor: 'black', 
   penStyle: 'normal'
 });
-store.mutations.assigns({ penWidth: 1, penStyle: 'dashed' });
+store.assigns({ penWidth: 1, penStyle: 'dashed' });
 //is equivalent to
-store.mutations.setPenWidth(1);
-store.mutations.setPenStyle('dashed');
+store.setPenWidth(1);
+store.setPenStyle('dashed');
 ```
-In mutations, there is `assigns` method to set multiple fields at a time.
+In store, there is `assigns` method to set multiple fields at a time.
 It is useful if you want to update multiple values.
 
 There is no performance difference since reactive effects (i.e. rendering) are batched by React and executed in the next frame.
@@ -113,17 +113,16 @@ const store = createStore<{theme: "light" | "dark"}>({theme: "light" })
 
 const ThemeSelector = () => {
   const { theme } = store.useSnapshot();
-  const { setTheme } = store.mutations;
   return <div>
     <IconButton
       icon="☀️"
       active={theme === 'light'}
-      onClick={() => setTheme("light")}
+      onClick={() => store.setTheme("light")}
     />
     <IconButton
       icon="🌙"
       active={theme === 'dark'}
-      onClick={() => setTheme("dark")}
+      onClick={() => store.setTheme("dark")}
     />
   </div>
 }
@@ -138,17 +137,16 @@ const store = createStore<{textSize: number, bgColor: string}>({
 
 const BookReaderSettings = () => {
   const snap = store.useSnapshot();;
-  const mut = store.mutations;
   return <div>
     <Slider
       value={snap.textSize}
-      onChange={mut.setTextSize}
+      onChange={store.setTextSize}
       min={10}
       max={20}
     />
     <ColorInput
       value={snap.bgColor}
-      onChange={mut.setBgColor}
+      onChange={store.setBgColor}
     />
   </div>
 }
