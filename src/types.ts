@@ -8,14 +8,20 @@ export type Mutations<T> = {
   ) => void;
 } & {
   [K in keyof T as `patch${Capitalize<K & string>}`]: (
-    attrs: Partial<Extract<T[K], object>>,
+    input:
+      | Partial<Extract<T[K], object>>
+      | ((prev: T[K]) => Partial<Extract<T[K], object>>),
   ) => void;
 } & {
   assigns: (attrs: Partial<T>) => void;
 };
 
+export type ChangesListener<T extends object> = (attrs: Partial<T>) => void;
+
 export type Store<T extends object> = {
   state: T;
   useSnapshot(): T;
   snapshot: T; //same as useSnapshot()
+  subscribe: (listener: ChangesListener<T>) => () => void;
+  mutations: Mutations<T>;
 } & Mutations<T>;
