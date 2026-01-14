@@ -83,6 +83,9 @@ export function createStore<T extends object>(initialState: T): Store<T> {
         return { ...prev, ...attrs };
       });
     };
+    _mutations[`toggle${suffix}`] = () => {
+      setValue((prev) => !prev as V);
+    };
   }
   mutations.assigns = (attrs: Partial<T>) => {
     for (const key in attrs) {
