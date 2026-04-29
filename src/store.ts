@@ -1,7 +1,9 @@
-import { produce } from "immer";
+import { Immer } from "immer";
 import { useEffect, useRef, useState } from "react";
 import { capitalizeFirstLetter, removeArrayItem } from "./helper";
 import { ChangesListener, Mutations, Store } from "./types";
+
+const immer = new Immer({autoFreeze: false});
 
 export function createStore<T extends object>(initialState: T): Store<T> {
   type K = Extract<keyof T, string>;
@@ -70,7 +72,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
     const suffix = capitalizeFirstLetter(key);
     _mutations[`set${suffix}`] = setValue;
     _mutations[`produce${suffix}`] = (fn: (draft: V) => void) => {
-      setValue((draft) => produce(draft, fn));
+      setValue((draft) => immer.produce(draft, fn));
     };
     _mutations[`patch${suffix}`] = (
       input: Partial<V> | ((prev: V) => Partial<V>),
