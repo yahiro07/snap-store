@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { capitalizeFirstLetter, removeArrayItem } from "./helper";
 import { ChangesListener, Mutations, Store } from "./types";
 
-const immer = new Immer({autoFreeze: false});
+const immer = new Immer({ autoFreeze: false });
 
 export function createStore<T extends object>(initialState: T): Store<T> {
   type K = Extract<keyof T, string>;
@@ -156,9 +156,6 @@ export function createStore<T extends object>(initialState: T): Store<T> {
   return {
     state,
     useSnapshot,
-    get snapshot() {
-      return useSnapshot();
-    },
     subscribe,
     mutations,
     ...mutations,

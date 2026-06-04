@@ -26,7 +26,6 @@ export type ChangesListener<T extends object> = (attrs: Partial<T>) => void;
 export type Store<T extends object> = {
   state: T;
   useSnapshot(): T;
-  snapshot: T; //same as useSnapshot()
   subscribe: (listener: ChangesListener<T>) => () => void;
   mutations: Mutations<T>;
 } & Mutations<T>;
