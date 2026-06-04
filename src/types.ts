@@ -27,4 +27,5 @@ export type Store<T extends object> = {
   useSnapshot(): T;
   subscribe: (listener: ChangesListener<T>) => () => void;
   mutations: Mutations<T>;
+  batch: (fn: () => void) => void;
 } & Mutations<T>;
