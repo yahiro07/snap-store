@@ -5,13 +5,13 @@
   "author": "yahiro",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -37,9 +37,7 @@
     "hooks"
   ],
   "scripts": {
-    "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
-    "build": "npm run build:esm && npm run build:cjs",
+    "build": "tsup",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -50,6 +48,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
+    "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   },
   "engines": {
