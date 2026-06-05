@@ -18,15 +18,14 @@ export type Mutations<T> = {
   [K in keyof T as T[K] extends boolean
     ? `toggle${Capitalize<K & string>}`
     : never]: () => void;
-} & {
-  assigns: (attrs: Partial<T>) => void;
 };
 export type ChangesListener<T extends object> = (attrs: Partial<T>) => void;
 
 export type Store<T extends object> = {
   state: T;
+  setState: (attrs: Partial<T>) => void;
   useSnapshot(): T;
-  snapshot: T; //same as useSnapshot()
   subscribe: (listener: ChangesListener<T>) => () => void;
   mutations: Mutations<T>;
+  batch: (fn: () => void) => void;
 } & Mutations<T>;

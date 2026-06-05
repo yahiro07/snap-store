@@ -3,9 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { capitalizeFirstLetter, removeArrayItem } from "./helper";
 import { ChangesListener, Mutations, Store } from "./types";
 
-const immer = new Immer({autoFreeze: false});
+const immer = new Immer({ autoFreeze: false });
 
 export function createStore<T extends object>(initialState: T): Store<T> {
+  if ("state" in initialState) {
+    throw new Error(
+      "The store state object cannot have a field name with 'state'.",
+    );
+  }
   type K = Extract<keyof T, string>;
   type V = T[K];
 
@@ -24,22 +29,12 @@ export function createStore<T extends object>(initialState: T): Store<T> {
   const _mutations = mutations as any;
 
   const listeners: ChangesListener<T>[] = [];
-  let changeset: Partial<T> | undefined;
-  let flushScheduled = false;
+  let changesets: Partial<T> | undefined;
+  let inBatch = false;
 
-  function flushChanges() {
-    if (changeset) {
-      for (const listener of listeners) {
-        listener(changeset);
-      }
-      changeset = undefined;
-    }
-    flushScheduled = false;
-  }
-  function scheduleFlush() {
-    if (!flushScheduled) {
-      queueMicrotask(flushChanges);
-      flushScheduled = true;
+  function callListeners(attrs: Partial<T>) {
+    for (const listener of listeners) {
+      listener(attrs);
     }
   }
 
@@ -58,9 +53,12 @@ export function createStore<T extends object>(initialState: T): Store<T> {
       }
       state[key] = value;
 
-      changeset ??= {};
-      changeset[key] = value;
-      scheduleFlush();
+      if (inBatch) {
+        changesets ??= {};
+        changesets[key] = value;
+      } else {
+        callListeners({ [key]: value } as unknown as Partial<T>);
+      }
 
       for (const hubKey in hub) {
         const entry = hub[hubKey];
@@ -89,7 +87,8 @@ export function createStore<T extends object>(initialState: T): Store<T> {
       setValue((prev) => !prev as V);
     };
   }
-  mutations.assigns = (attrs: Partial<T>) => {
+
+  const setState = (attrs: Partial<T>) => {
     for (const key in attrs) {
       const suffix = capitalizeFirstLetter(key);
       const value = attrs[key];
@@ -152,15 +151,26 @@ export function createStore<T extends object>(initialState: T): Store<T> {
       removeArrayItem(listeners, fn);
     };
   };
+  const batch = (fn: () => void) => {
+    inBatch = true;
+    try {
+      fn();
+    } finally {
+      inBatch = false;
+      if (changesets !== undefined) {
+        callListeners(changesets);
+        changesets = undefined;
+      }
+    }
+  };
 
   return {
     state,
+    setState,
     useSnapshot,
-    get snapshot() {
-      return useSnapshot();
-    },
     subscribe,
     mutations,
     ...mutations,
+    batch,
   };
 }

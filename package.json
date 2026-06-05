@@ -1,17 +1,17 @@
 {
   "name": "snap-store",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "An easy-to-use global state management library for React.",
   "author": "yahiro",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -37,19 +37,18 @@
     "hooks"
   ],
   "scripts": {
-    "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
-    "build": "npm run build:esm && npm run build:cjs",
+    "build": "tsup",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "immer": "^11.1.4"
+    "immer": "^11.1.8"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.16",
+    "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   },
   "engines": {
