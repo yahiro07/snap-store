@@ -1,6 +1,6 @@
 {
   "name": "snap-store",
-  "version": "0.1.7-dev",
+  "version": "0.1.7",
   "description": "An easy-to-use global state management library for React.",
   "author": "yahiro",
   "license": "MIT",
