@@ -10,4 +10,5 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   external: ["react"],
+  noExternal: ["immer"],
 });
