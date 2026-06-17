@@ -1,11 +1,11 @@
 {
   "name": "snap-store",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "An easy-to-use global state management library for React.",
   "author": "yahiro",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -37,7 +37,7 @@
     "hooks"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -45,9 +45,9 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.16",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
-    "immer": "^11.1.8"
+    "limu": "^4.1.3",
+    "tsdown": "^0.22.3",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=16.0.0"
