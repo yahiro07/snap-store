@@ -12,6 +12,5 @@ export default defineConfig({
   deps: {
     onlyBundle: false,
     neverBundle: ["react"],
-    alwaysBundle: ["immer"],
   },
 });
