@@ -5,7 +5,7 @@
   "author": "yahiro",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -37,7 +37,7 @@
     "hooks"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -45,9 +45,9 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.16",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
-    "immer": "^11.1.8"
+    "immer": "^11.1.8",
+    "tsdown": "^0.22.3",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=16.0.0"

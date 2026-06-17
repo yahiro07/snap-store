@@ -1,6 +1,7 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from "tsdown";
 
 export default defineConfig({
+  platform: "browser",
   entry: ["src/index.ts"],
   format: ["cjs", "esm"],
   dts: true,
@@ -8,7 +9,9 @@ export default defineConfig({
   minify: true,
   sourcemap: true,
   treeshake: true,
-  splitting: false,
-  external: ["react"],
-  noExternal: ["immer"],
+  deps: {
+    onlyBundle: false,
+    neverBundle: ["react"],
+    alwaysBundle: ["immer"],
+  },
 });
