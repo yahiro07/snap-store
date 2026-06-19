@@ -86,7 +86,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
     };
   }
 
-  const setState = (attrs: Partial<T>) => {
+  const assign = (attrs: Partial<T>) => {
     for (const key in attrs) {
       const suffix = capitalizeFirstLetter(key);
       const value = attrs[key];
@@ -164,7 +164,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   return {
     state,
-    setState,
+    assign,
     useSnapshot,
     subscribe,
     mutations,
