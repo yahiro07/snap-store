@@ -4,11 +4,6 @@ import { capitalizeFirstLetter, removeArrayItem } from "./helper";
 import { ChangesListener, Mutations, Store } from "./types";
 
 export function createStore<T extends object>(initialState: T): Store<T> {
-  if ("state" in initialState) {
-    throw new Error(
-      "The store state object cannot have a field name with 'state'.",
-    );
-  }
   type K = Extract<keyof T, string>;
   type V = T[K];
 
