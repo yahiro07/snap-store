@@ -4,11 +4,6 @@ import { capitalizeFirstLetter, removeArrayItem } from "./helper";
 import { ChangesListener, Mutations, Store } from "./types";
 
 export function createStore<T extends object>(initialState: T): Store<T> {
-  if ("state" in initialState) {
-    throw new Error(
-      "The store state object cannot have a field name with 'state'.",
-    );
-  }
   type K = Extract<keyof T, string>;
   type V = T[K];
 
@@ -86,7 +81,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
     };
   }
 
-  const setState = (attrs: Partial<T>) => {
+  const assign = (attrs: Partial<T>) => {
     for (const key in attrs) {
       const suffix = capitalizeFirstLetter(key);
       const value = attrs[key];
@@ -164,7 +159,7 @@ export function createStore<T extends object>(initialState: T): Store<T> {
 
   return {
     state,
-    setState,
+    assign,
     useSnapshot,
     subscribe,
     mutations,
