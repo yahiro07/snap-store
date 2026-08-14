@@ -153,8 +153,11 @@ export function createStoreImpl<T extends object>(initialState: T, hooks: Hooks)
     return entryRef.current.getterObject;
   };
 
-  const subscribe = (fn: ChangesListener<T>) => {
+  const subscribe = (fn: ChangesListener<T>, initialCall?: boolean) => {
     listeners.push(fn);
+    if (initialCall) {
+      fn(state);
+    }
     return () => {
       removeArrayItem(listeners, fn);
     };
