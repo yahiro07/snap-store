@@ -9,10 +9,7 @@ type Hooks = {
   useState: typeof useState;
 };
 
-export function createStoreImpl<T extends object>(
-  initialState: T,
-  hooks: Hooks,
-): Store<T> {
+export function createStoreImpl<T extends object>(initialState: T, hooks: Hooks): Store<T> {
   const { useEffect, useRef, useState } = hooks;
 
   type K = Extract<keyof T, string>;
@@ -24,6 +21,7 @@ export function createStoreImpl<T extends object>(
     getterObject: T;
     activate: () => void;
     deactivate: () => void;
+    renderedStateVersion: number;
   };
 
   const hub: Record<string, HookEntry> = {};
@@ -35,6 +33,8 @@ export function createStoreImpl<T extends object>(
   const listeners: ChangesListener<T>[] = [];
   let changesets: Partial<T> | undefined;
   let inBatch = false;
+
+  let stateVersion = 0;
 
   function callListeners(attrs: Partial<T>) {
     for (const listener of listeners) {
@@ -56,6 +56,7 @@ export function createStoreImpl<T extends object>(
         return;
       }
       state[key] = value;
+      stateVersion++;
 
       if (inBatch) {
         changesets ??= {};
@@ -76,14 +77,10 @@ export function createStoreImpl<T extends object>(
     _mutations[`produce${suffix}`] = (fn: (draft: V) => void) => {
       setValue((draft) => produce(draft, fn));
     };
-    _mutations[`patch${suffix}`] = (
-      input: Partial<V> | ((prev: V) => Partial<V>),
-    ) => {
+    _mutations[`patch${suffix}`] = (input: Partial<V> | ((prev: V) => Partial<V>)) => {
       setValue((prev) => {
         const attrs =
-          typeof input === "function"
-            ? (input as (prev: V) => Partial<V>)(prev)
-            : input;
+          typeof input === "function" ? (input as (prev: V) => Partial<V>)(prev) : input;
         return { ...prev, ...attrs };
       });
     };
@@ -126,6 +123,7 @@ export function createStoreImpl<T extends object>(
           delete hub[hookId];
         }
       },
+      renderedStateVersion: stateVersion,
     };
     return hookEntry;
   };
@@ -137,10 +135,16 @@ export function createStoreImpl<T extends object>(
       const id = Math.random().toString(36).substring(2, 15);
       entryRef.current = createHookEntry(id);
     }
+    entryRef.current.renderedStateVersion = stateVersion;
+
     useEffect(() => {
-      if (entryRef.current) {
-        entryRef.current.refreshView = () => forceRender((x) => x + 1);
-        entryRef.current.activate();
+      const entry = entryRef.current;
+      if (entry) {
+        entry.refreshView = () => forceRender((x) => x + 1);
+        entry.activate();
+        if (entry.renderedStateVersion !== stateVersion) {
+          entry.refreshView?.();
+        }
       }
       return () => {
         entryRef.current?.deactivate();
@@ -149,8 +153,11 @@ export function createStoreImpl<T extends object>(
     return entryRef.current.getterObject;
   };
 
-  const subscribe = (fn: ChangesListener<T>) => {
+  const subscribe = (fn: ChangesListener<T>, initialCall?: boolean) => {
     listeners.push(fn);
+    if (initialCall) {
+      fn(state);
+    }
     return () => {
       removeArrayItem(listeners, fn);
     };
